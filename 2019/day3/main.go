@@ -43,6 +43,10 @@ func (p *point) same(o *point) bool {
 	return p.x == o.x && p.y == o.y
 }
 
+func (p *point) ToString() string {
+	return fmt.Sprintf("(%d, %d)", p.x, p.y)
+}
+
 type segment struct {
 	p1 *point
 	p2 *point
@@ -64,6 +68,10 @@ func (s *segment) len() int {
 		return abs(s.p1.y - s.p2.y)
 	}
 	return abs(s.p1.x - s.p2.x)
+}
+
+func (s *segment) ToString() string {
+	return fmt.Sprintf("%s, %s", s.p1.ToString(), s.p2.ToString())
 }
 
 func intersect(horizontal, vertical *segment) *point {
@@ -145,8 +153,8 @@ func part1() {
 }
 
 func isPassing(s *segment, p *point) int {
-	isHorizontalPassing := s.getOrientation() == -1 && p.y >= min(s.p1.y, s.p2.y) && p.y <= max(s.p1.y, s.p2.y)
-	isVerticalPassing := s.getOrientation() == 1 && p.x >= min(s.p1.x, s.p2.x) && p.x <= max(s.p1.x, s.p2.x)
+	isHorizontalPassing := s.getOrientation() == -1 && p.y == s.p1.y && p.x >= min(s.p1.x, s.p2.x) && p.x <= max(s.p1.x, s.p2.x)
+	isVerticalPassing := s.getOrientation() == 1 && p.x == s.p1.x && p.y >= min(s.p1.y, s.p2.y) && p.y <= max(s.p1.y, s.p2.y)
 	if isHorizontalPassing {
 		return abs(s.p1.x - p.x)
 	}
