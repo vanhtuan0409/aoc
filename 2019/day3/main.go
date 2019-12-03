@@ -59,6 +59,13 @@ func (s *segment) getOrientation() int {
 	return -1
 }
 
+func (s *segment) len() int {
+	if s.getOrientation() == 1 {
+		return abs(s.p1.y - s.p2.y)
+	}
+	return abs(s.p1.x - s.p2.x)
+}
+
 func intersect(horizontal, vertical *segment) *point {
 	if horizontal.getOrientation()*vertical.getOrientation() > 0 {
 		return nil
@@ -108,7 +115,7 @@ func manhattanDist(p1, p2 *point) int {
 	return abs(p1.x-p2.x) + abs(p1.y-p2.y)
 }
 
-func main() {
+func part1() {
 	r := bufio.NewReader(os.Stdin)
 	l1, _ := r.ReadString('\n')
 	l2, _ := r.ReadString('\n')
@@ -135,4 +142,58 @@ func main() {
 	}
 
 	fmt.Println(minDist)
+}
+
+func isPassing(s *segment, p *point) int {
+	isHorizontalPassing := s.getOrientation() == -1 && p.y >= min(s.p1.y, s.p2.y) && p.y <= max(s.p1.y, s.p2.y)
+	isVerticalPassing := s.getOrientation() == 1 && p.x >= min(s.p1.x, s.p2.x) && p.x <= max(s.p1.x, s.p2.x)
+	if isHorizontalPassing {
+		return abs(s.p1.x - p.x)
+	}
+	if isVerticalPassing {
+		return abs(s.p1.y - p.y)
+	}
+	return -1
+}
+
+func countStep(p *point, segs []*segment) int {
+	count := 0
+	for _, s := range segs {
+		passingCount := isPassing(s, p)
+		if passingCount == -1 {
+			count += s.len()
+		} else {
+			count += passingCount
+			return count
+		}
+	}
+	return -1
+}
+
+func main() {
+	r := bufio.NewReader(os.Stdin)
+	l1, _ := r.ReadString('\n')
+	l2, _ := r.ReadString('\n')
+	ray1 := strings.Split(strings.TrimSpace(l1), ",")
+	ray2 := strings.Split(strings.TrimSpace(l2), ",")
+
+	O := newPoint(0, 0)
+	segs1 := tracing(O, ray1)
+	segs2 := tracing(O, ray2)
+
+	points := []*point{}
+	for _, s1 := range segs1 {
+		for _, s2 := range segs2 {
+			i := intersect(s1, s2)
+			if i != nil && !i.same(O) {
+				points = append(points, i)
+			}
+		}
+	}
+
+	countMin := math.MaxInt64
+	for _, p := range points {
+		countMin = min(countMin, countStep(p, segs1)+countStep(p, segs2))
+	}
+	fmt.Println(countMin)
 }
