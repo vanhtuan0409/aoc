@@ -11,6 +11,14 @@ func calculateFuel(mass int) int {
 	return mass/3 - 2
 }
 
+func recursiveCalculateFuel(mass int) int {
+	requiredFuel := calculateFuel(mass)
+	if requiredFuel < 0 {
+		return 0
+	}
+	return requiredFuel + recursiveCalculateFuel(requiredFuel)
+}
+
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	sum := 0
@@ -19,7 +27,7 @@ func main() {
 		if err != nil {
 			continue
 		}
-		sum += calculateFuel(mass)
+		sum += recursiveCalculateFuel(mass)
 	}
 	fmt.Println(sum)
 }
