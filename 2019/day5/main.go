@@ -13,7 +13,7 @@ type program struct {
 	originalIntCode []int
 	intcode         []int
 	offset          int
-	stdint          *bufio.Reader
+	stdin           *bufio.Reader
 }
 
 func newProgram(intcode []int) *program {
@@ -95,7 +95,7 @@ func (p *program) handleMultiply(modes []int) error {
 func (p *program) handleInput() error {
 	addr := p.getValue(1, p.offset+1)
 	fmt.Print("Please input: ")
-	rawValue, _ := p.stdint.ReadString('\n')
+	rawValue, _ := p.stdin.ReadString('\n')
 	value, _ := strconv.Atoi(strings.TrimSpace(rawValue))
 	p.set(addr, value)
 	p.setOffset(p.offset + 2)
@@ -197,7 +197,7 @@ func loadProgram(path string) *program {
 	rawData, _, _ := r.ReadLine()
 	intcode := convert(strings.Split(string(rawData), ","))
 	p := newProgram(intcode)
-	p.stdint = bufio.NewReader(os.Stdin)
+	p.stdin = bufio.NewReader(os.Stdin)
 	return p
 }
 
