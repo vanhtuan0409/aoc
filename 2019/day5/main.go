@@ -193,6 +193,7 @@ func setInput(p *program, val1, val2 int) {
 
 func loadProgram(path string) *program {
 	f, _ := os.Open(path)
+	defer f.Close()
 	r := bufio.NewReader(f)
 	rawData, _, _ := r.ReadLine()
 	intcode := convert(strings.Split(string(rawData), ","))
