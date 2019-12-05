@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -14,6 +13,7 @@ type program struct {
 	originalIntCode []int
 	intcode         []int
 	offset          int
+	stdint          *bufio.Reader
 }
 
 func newProgram(intcode []int) *program {
@@ -39,7 +39,7 @@ func (p *program) decodeCommand() (int, []int) {
 	modes := make([]int, 3)
 	for i := 0; i < 3; i++ {
 		m, _ := strconv.Atoi(string(command[i]))
-		modes[2-1] = m
+		modes[2-i] = m
 	}
 	return opcode, modes
 }
@@ -77,18 +77,34 @@ func (p *program) setOffset(offset int) {
 }
 
 func (p *program) handleAdd(modes []int) error {
-	val1 := p.getValue(modes[1], p.offset+1)
-	val2 := p.getValue(modes[2], p.offset+2)
+	val1 := p.getValue(modes[0], p.offset+1)
+	val2 := p.getValue(modes[1], p.offset+2)
 	p.setPointer(p.offset+3, val1+val2)
 	p.setOffset(p.offset + 4)
 	return nil
 }
 
 func (p *program) handleMultiply(modes []int) error {
-	val1 := p.getValue(modes[1], p.offset+1)
-	val2 := p.getValue(modes[2], p.offset+2)
+	val1 := p.getValue(modes[0], p.offset+1)
+	val2 := p.getValue(modes[1], p.offset+2)
 	p.setPointer(p.offset+3, val1*val2)
 	p.setOffset(p.offset + 4)
+	return nil
+}
+
+func (p *program) handleInput() error {
+	addr := p.getValue(1, p.offset+1)
+	rawValue, _ := p.stdint.ReadString('\n')
+	value, _ := strconv.Atoi(strings.TrimSpace(rawValue))
+	p.set(addr, value)
+	p.setOffset(p.offset + 2)
+	return nil
+}
+
+func (p *program) handleOutput() error {
+	value := p.getValue(0, p.offset+1)
+	fmt.Println(value)
+	p.setOffset(p.offset + 2)
 	return nil
 }
 
@@ -101,6 +117,10 @@ func (p *program) execute() error {
 			p.handleAdd(modes)
 		} else if code == 2 {
 			p.handleMultiply(modes)
+		} else if code == 3 {
+			p.handleInput()
+		} else if code == 4 {
+			p.handleOutput()
 		} else {
 			return errors.New("Unknown opcode")
 		}
@@ -126,34 +146,17 @@ func setInput(p *program, val1, val2 int) {
 	p.intcode[2] = val2
 }
 
-func loadProgram() *program {
-	r := bufio.NewReader(os.Stdin)
+func loadProgram(path string) *program {
+	f, _ := os.Open(path)
+	r := bufio.NewReader(f)
 	rawData, _, _ := r.ReadLine()
 	intcode := convert(strings.Split(string(rawData), ","))
 	p := newProgram(intcode)
+	p.stdint = bufio.NewReader(os.Stdin)
 	return p
 }
 
-func part1() {
-	p := loadProgram()
-	setInput(p, 12, 2)
-	if err := p.execute(); err != nil {
-		log.Fatal(err)
-	} else {
-		fmt.Println(p.getResult())
-	}
-}
-
 func main() {
-	p := loadProgram()
-	for i := 1; i < 99; i++ {
-		for j := 1; j < 99; j++ {
-			setInput(p, i, j)
-			p.execute()
-			if p.getResult() == 19690720 {
-				fmt.Println(100*i + j)
-			}
-			p.reset()
-		}
-	}
+	p := loadProgram(os.Args[1])
+	p.execute()
 }
