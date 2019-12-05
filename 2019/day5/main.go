@@ -32,11 +32,16 @@ func (p *program) reset() {
 	p.offset = 0
 }
 
-func (p *program) getCurrent() int {
-	if p.offset >= len(p.intcode) {
-		return -1
+func (p *program) decodeCommand() (int, []int) {
+	currentValue := p.getOffset(p.offset)
+	command := fmt.Sprintf("%05d", currentValue)
+	opcode, _ := strconv.Atoi(command[len(command)-2:])
+	modes := make([]int, 3)
+	for i := 0; i < 3; i++ {
+		m, _ := strconv.Atoi(string(command[i]))
+		modes[2-1] = m
 	}
-	return p.intcode[p.offset]
+	return opcode, modes
 }
 
 func (p *program) getOffset(offset int) int {
@@ -71,17 +76,17 @@ func (p *program) setOffset(offset int) {
 	p.offset = offset
 }
 
-func (p *program) handleAdd() error {
-	val1 := p.getValue(0, p.offset+1)
-	val2 := p.getValue(0, p.offset+2)
+func (p *program) handleAdd(modes []int) error {
+	val1 := p.getValue(modes[1], p.offset+1)
+	val2 := p.getValue(modes[2], p.offset+2)
 	p.setPointer(p.offset+3, val1+val2)
 	p.setOffset(p.offset + 4)
 	return nil
 }
 
-func (p *program) handleMultiply() error {
-	val1 := p.getValue(0, p.offset+1)
-	val2 := p.getValue(0, p.offset+2)
+func (p *program) handleMultiply(modes []int) error {
+	val1 := p.getValue(modes[1], p.offset+1)
+	val2 := p.getValue(modes[2], p.offset+2)
 	p.setPointer(p.offset+3, val1*val2)
 	p.setOffset(p.offset + 4)
 	return nil
@@ -89,13 +94,13 @@ func (p *program) handleMultiply() error {
 
 func (p *program) execute() error {
 	for {
-		code := p.getCurrent()
+		code, modes := p.decodeCommand()
 		if code == 99 {
 			break
 		} else if code == 1 {
-			p.handleAdd()
+			p.handleAdd(modes)
 		} else if code == 2 {
-			p.handleMultiply()
+			p.handleMultiply(modes)
 		} else {
 			return errors.New("Unknown opcode")
 		}
