@@ -109,6 +109,41 @@ func (p *program) handleOutput() error {
 	return nil
 }
 
+func (p *program) handleJump(modes []int, flag bool) error {
+	addr := p.getValue(modes[0], p.offset+1)
+	shouldJump := (flag && addr > 0) || (!flag && addr == 0)
+	if shouldJump {
+		p.setOffset(addr)
+	} else {
+		p.setOffset(p.offset + 2)
+	}
+	return nil
+}
+
+func (p *program) handleLessThan(modes []int) error {
+	val1 := p.getValue(modes[0], p.offset+1)
+	val2 := p.getValue(modes[1], p.offset+2)
+	if val1 < val2 {
+		p.setPointer(p.offset+3, 1)
+	} else {
+		p.setPointer(p.offset+3, 0)
+	}
+	p.setOffset(p.offset + 4)
+	return nil
+}
+
+func (p *program) handleEquals(modes []int) error {
+	val1 := p.getValue(modes[0], p.offset+1)
+	val2 := p.getValue(modes[1], p.offset+2)
+	if val1 == val2 {
+		p.setPointer(p.offset+3, 1)
+	} else {
+		p.setPointer(p.offset+3, 0)
+	}
+	p.setOffset(p.offset + 4)
+	return nil
+}
+
 func (p *program) execute() error {
 	for {
 		code, modes := p.decodeCommand()
@@ -122,6 +157,14 @@ func (p *program) execute() error {
 			p.handleInput()
 		} else if code == 4 {
 			p.handleOutput()
+		} else if code == 5 {
+			p.handleJump(modes, true)
+		} else if code == 6 {
+			p.handleJump(modes, false)
+		} else if code == 7 {
+			p.handleLessThan(modes)
+		} else if code == 8 {
+			p.handleEquals(modes)
 		} else {
 			return errors.New("Unknown opcode")
 		}
