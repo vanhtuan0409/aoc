@@ -110,12 +110,13 @@ func (p *program) handleOutput() error {
 }
 
 func (p *program) handleJump(modes []int, flag bool) error {
-	addr := p.getValue(modes[0], p.offset+1)
-	shouldJump := (flag && addr > 0) || (!flag && addr == 0)
+	value := p.getValue(modes[0], p.offset+1)
+	shouldJump := (flag && value > 0) || (!flag && value == 0)
+	addr := p.getValue(modes[1], p.offset+2)
 	if shouldJump {
 		p.setOffset(addr)
 	} else {
-		p.setOffset(p.offset + 2)
+		p.setOffset(p.offset + 3)
 	}
 	return nil
 }
