@@ -94,6 +94,7 @@ func (p *program) handleMultiply(modes []int) error {
 
 func (p *program) handleInput() error {
 	addr := p.getValue(1, p.offset+1)
+	fmt.Print("Please input: ")
 	rawValue, _ := p.stdint.ReadString('\n')
 	value, _ := strconv.Atoi(strings.TrimSpace(rawValue))
 	p.set(addr, value)
