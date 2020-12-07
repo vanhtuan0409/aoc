@@ -48,7 +48,7 @@ struct State {
 }
 
 // perform DFS to find the shiny gold bag
-fn part1(graph: &HashMap<String, Vec<String>>) {
+fn part1(graph: &HashMap<String, Vec<(String, usize)>>) {
     // init states
     let mut stack: Vec<State> = vec![];
     let mut start_node = HashSet::new();
@@ -77,14 +77,14 @@ fn part1(graph: &HashMap<String, Vec<String>>) {
             .get(&state.node)
             .unwrap_or(&vec![])
             .iter()
-            .filter(|&it| !state.visited.contains(it))
+            .filter(|&it| !state.visited.contains(&it.0))
             .map(|next_node| {
                 let mut visited = state.visited.clone();
-                visited.insert(next_node.clone());
+                visited.insert(next_node.0.clone());
                 let mut path = state.path.clone();
-                path.push(next_node.clone());
+                path.push(next_node.0.clone());
                 State {
-                    node: next_node.clone(),
+                    node: next_node.0.clone(),
                     visited,
                     path,
                 }
@@ -95,6 +95,30 @@ fn part1(graph: &HashMap<String, Vec<String>>) {
     }
 
     println!("answers {:?}", start_node.len());
+}
+
+fn count(graph: &HashMap<String, Vec<(String, usize)>>, bag: &str) -> usize {
+    println!("Checking bag {}", bag);
+    let node = graph.get(bag);
+    if node.is_none() {
+        return 0;
+    }
+    let children = node.unwrap();
+    if children.len() == 0 {
+        return 1;
+    }
+
+    let mut total = 1;
+    for child in children {
+        total += child.1 * count(graph, &child.0);
+    }
+
+    total
+}
+
+fn part2(graph: &HashMap<String, Vec<(String, usize)>>) {
+    let count = count(graph, "shiny gold") - 1;
+    println!("count {}", count);
 }
 
 fn main() {
@@ -108,15 +132,11 @@ fn main() {
         .collect::<Vec<_>>();
 
     // build graph
-    let mut graph: HashMap<String, Vec<String>> = HashMap::new();
+    let mut graph: HashMap<String, Vec<(String, usize)>> = HashMap::new();
     for input in inputs {
-        let connected = input
-            .includes
-            .into_iter()
-            .map(|it| it.0)
-            .collect::<Vec<_>>();
+        let connected = input.includes.into_iter().collect::<Vec<_>>();
         graph.insert(input.bag_name, connected);
     }
 
-    part1(&graph);
+    part2(&graph);
 }
