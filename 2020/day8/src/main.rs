@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::io::{self, BufRead};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 enum Op {
     Nop,
     Acc(i32),
@@ -43,18 +43,36 @@ impl Program {
         self.ops.get(self.offset as usize).cloned()
     }
 
-    fn run(&mut self) -> Result<i32, ()> {
+    fn run(&mut self) -> Result<bool, ()> {
         loop {
             if self.visited.contains(&self.offset) {
                 break;
             }
             self.visited.insert(self.offset.clone());
-            let op = self.get_current_op().ok_or(())?;
+            let op = match self.get_current_op() {
+                Some(op) => op,
+                None => break,
+            };
             println!("Handle op at {} - {:?}", self.offset, op);
             self.process(op);
         }
 
-        Ok(self.acc)
+        Ok(self.offset == self.ops.len() as i32)
+    }
+
+    fn self_heal(&self) -> Vec<Self> {
+        let mut ret = vec![];
+        for (index, op) in self.ops.iter().enumerate() {
+            if let Op::Jump(_) = op {
+                let mut new_ops = self.ops.clone();
+                new_ops[index] = Op::Nop; //replace jump with nop
+                ret.push(Self {
+                    ops: new_ops,
+                    ..Self::default()
+                });
+            }
+        }
+        ret
     }
 }
 
@@ -80,7 +98,15 @@ fn main() {
         })
         .collect::<Vec<_>>();
 
-    let mut p = Program::new(ops);
-    let acc = p.run().unwrap();
-    println!("acc {}", acc);
+    let p = Program::new(ops);
+    let mut possibilities = p.self_heal();
+    possibilities.push(p);
+
+    for mut p in possibilities {
+        println!("try 1 possibility");
+        if let Ok(true) = p.run() {
+            println!("==== found acc {}", p.acc);
+            break;
+        }
+    }
 }
