@@ -25,6 +25,7 @@ impl Program {
     }
 
     fn process(&mut self, op: Op) {
+        println!("Handle op at {} - {:?}", self.offset, op);
         match op {
             Op::Nop => {
                 self.offset += 1;
@@ -43,6 +44,15 @@ impl Program {
         self.ops.get(self.offset as usize).cloned()
     }
 
+    fn replace_op(&self, index: usize, op: Op) -> Self {
+        let mut new_ops = self.ops.clone();
+        new_ops[index] = op;
+        Self {
+            ops: new_ops,
+            ..Self::default()
+        }
+    }
+
     fn run(&mut self) -> Result<bool, ()> {
         loop {
             if self.visited.contains(&self.offset) {
@@ -53,26 +63,10 @@ impl Program {
                 Some(op) => op,
                 None => break,
             };
-            println!("Handle op at {} - {:?}", self.offset, op);
             self.process(op);
         }
 
         Ok(self.offset == self.ops.len() as i32)
-    }
-
-    fn self_heal(&self) -> Vec<Self> {
-        let mut ret = vec![];
-        for (index, op) in self.ops.iter().enumerate() {
-            if let Op::Jump(_) = op {
-                let mut new_ops = self.ops.clone();
-                new_ops[index] = Op::Nop; //replace jump with nop
-                ret.push(Self {
-                    ops: new_ops,
-                    ..Self::default()
-                });
-            }
-        }
-        ret
     }
 }
 
@@ -99,14 +93,14 @@ fn main() {
         .collect::<Vec<_>>();
 
     let p = Program::new(ops);
-    let mut possibilities = p.self_heal();
-    possibilities.push(p);
-
-    for mut p in possibilities {
-        println!("try 1 possibility");
-        if let Ok(true) = p.run() {
-            println!("==== found acc {}", p.acc);
-            break;
+    for (index, op) in p.ops.iter().enumerate() {
+        if let Op::Jump(_) = op {
+            println!("=== try a new possibility");
+            let mut new_p = p.replace_op(index, Op::Nop); // replace jump by nop
+            if let Ok(true) = new_p.run() {
+                println!("=== found acc: {}", new_p.acc);
+                break;
+            }
         }
     }
 }
