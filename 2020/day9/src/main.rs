@@ -34,10 +34,10 @@ fn part2(nums: &[i32], target: i32) -> Option<i32> {
             return Some(min + max);
         }
 
-        if let Some(num) = nums.get(right + 1) {
-            if sum + num <= target {
+        if let Some(next) = nums.get(right + 1) {
+            if sum + next <= target {
                 // try to advance right
-                sum += num;
+                sum += next;
                 right += 1;
             } else if left < right {
                 // try to advance left
