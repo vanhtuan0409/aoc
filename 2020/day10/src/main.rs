@@ -16,17 +16,15 @@ fn count_paths(
     }
 
     let current_adapter = adapters[start_index];
-    let next_moves = adapters
+    let result = adapters
         .iter()
         .skip(start_index + 1)
         .enumerate()
         .take_while(|(_, adapter)| *adapter - current_adapter <= max_diff)
-        .map(|(index, _)| start_index + index + 1)
-        .collect::<Vec<_>>();
-    let result = next_moves
-        .into_iter()
-        .rev()
-        .map(|index| count_paths(map, adapters, index, max_diff, target))
+        .map(|(index, _)| {
+            let index = start_index + index + 1;
+            count_paths(map, adapters, index, max_diff, target)
+        })
         .sum();
 
     map.insert(start_index, result);
@@ -46,17 +44,11 @@ fn main() {
 
     let max_diff = 3;
     let mut map = HashMap::new();
-    let init_moves = adapters
+    let count: u64 = adapters
         .iter()
         .enumerate()
         .take_while(|(_, adapter)| **adapter <= max_diff)
-        .map(|(index, _)| index)
-        .collect::<Vec<_>>();
-
-    let count: u64 = init_moves
-        .into_iter()
-        .rev()
-        .map(|index| count_paths(&mut map, &adapters, index, max_diff, adapters.len() - 1))
+        .map(|(index, _)| count_paths(&mut map, &adapters, index, max_diff, adapters.len() - 1))
         .sum();
 
     println!("{}", count);
