@@ -6,7 +6,7 @@ use std::io::{self, BufRead};
 use std::str::FromStr;
 
 fn main() {
-    let f: io::Result<File> = get_input_file!("sample.txt");
+    let f: io::Result<File> = get_input_file!("input1.txt");
     let r = io::BufReader::new(f.unwrap());
 
     let sum = r
@@ -14,7 +14,7 @@ fn main() {
         .map(|line| line.unwrap())
         .map(|line| line.parse::<Assignment>())
         .flatten()
-        .filter(|it| it.is_fully_contain())
+        .filter(|it| it.is_overlapped())
         .map(|it| {
             println!("{:?}", it);
             it
@@ -30,6 +30,10 @@ struct CleanRange(usize, usize);
 impl CleanRange {
     fn is_fully_contain(&self, other: &Self) -> bool {
         (self.0 <= other.0) && (self.1 >= other.1)
+    }
+
+    fn is_overlapped(&self, other: &Self) -> bool {
+        std::cmp::max(self.0, other.0) <= std::cmp::min(self.1, other.1)
     }
 
     fn len(&self) -> usize {
@@ -58,6 +62,12 @@ impl Assignment {
         let left = self.l.get(0).unwrap();
         let right = self.l.get(1).unwrap();
         left.is_fully_contain(right)
+    }
+
+    fn is_overlapped(&self) -> bool {
+        let left = self.l.get(0).unwrap();
+        let right = self.l.get(1).unwrap();
+        left.is_overlapped(right)
     }
 }
 
