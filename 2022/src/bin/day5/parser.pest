@@ -1,0 +1,15 @@
+crate_block = @{ "[" ~ (ASCII_ALPHA) ~ "]" }
+crate_empty = @{ "   " }
+crate_holder = _{ crate_block | crate_empty }
+crate_line = { crate_holder ~ (" " ~ crate_holder)* }
+crate_lines = _{ crate_line ~ (NEWLINE ~ crate_line)* }
+
+stack_idx = _{ " " ~ (ASCII_NONZERO_DIGIT) ~ " "? }
+stack_idx_line = _{ stack_idx ~ (" " ~ stack_idx)* }
+
+graph = _{ crate_lines ~ NEWLINE ~ stack_idx_line }
+
+command = { "move " ~ (ASCII_DIGIT)+ ~ " from " ~ (ASCII_NONZERO_DIGIT) ~ " to " ~ (ASCII_NONZERO_DIGIT) }
+commands = _{ command ~ (NEWLINE ~ command)* }
+
+input = { SOI ~ graph ~ NEWLINE ~ NEWLINE ~ commands ~ NEWLINE? ~ EOI }
