@@ -1,0 +1,16 @@
+dir_name = { ASCII_ALPHA+ }
+file_name = { ASCII_ALPHA+ ~ ("." ~ ASCII_ALPHA+)? }
+file_size = { ASCII_DIGIT+ }
+
+dir_entry = { "dir " ~ dir_name }
+file_entry = { file_size ~ " " ~ file_name }
+ls_entry = _{ dir_entry | file_entry }
+
+ls_result = _{ (ls_entry) ~ (NEWLINE ~ ls_entry)* }
+ls_command = { "$ ls" ~ NEWLINE ~ ls_result }
+cd_args = { dir_name | ".." | "/" }
+cd_command = { "$ cd " ~ cd_args }
+
+command_run = _{ ls_command | cd_command }
+program = { command_run ~ (NEWLINE ~ command_run)* }
+
