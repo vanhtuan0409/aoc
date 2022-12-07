@@ -71,8 +71,13 @@ impl Game {
         // moving stuffs
         self.commands.iter().for_each(|command| {
             let count = command.count;
+            let mut tmp_stack = vec![];
             for _ in 0..count {
                 let taken = self.stacks[command.from_stack].pop().unwrap();
+                tmp_stack.push(taken);
+            }
+            tmp_stack.reverse();
+            for taken in tmp_stack {
                 self.stacks[command.to_stack].push(taken);
             }
         });
