@@ -13,18 +13,24 @@ fn main() {
         .iter()
         .for_each(|command| state.handle_command(command));
 
-    let sum: u64 = state
+    let total_used = state.stats.get("/").unwrap().clone();
+    let threshold = 70000000 - 30000000;
+    let delete_threshold = total_used - threshold;
+    let delete_entry = state
         .stats
         .iter()
         .map(|entry| {
             println!("{} - {}", entry.0, entry.1);
             entry
         })
-        .filter(|(_, size)| **size <= 100000)
-        .map(|(_, size)| size)
-        .sum();
+        .filter(|(_, size)| **size >= delete_threshold)
+        .sorted_by(|a, b| std::cmp::Ord::cmp(a.1, b.1))
+        .next();
 
-    println!("sum {}", sum)
+    println!("== total used: {}", total_used);
+    println!("== threshold: {}", threshold);
+    println!("== delete threshold: {}", delete_threshold);
+    println!("== target: {:?}", delete_entry);
 }
 
 struct GameState {
